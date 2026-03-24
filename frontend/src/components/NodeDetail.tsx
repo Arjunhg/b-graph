@@ -1,0 +1,1 @@
+// Sidebar when a node is clicked

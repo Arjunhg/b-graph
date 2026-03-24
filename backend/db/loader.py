@@ -1,0 +1,1 @@
+"""CSV → SQLite ingestion logic"""

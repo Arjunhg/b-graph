@@ -1,0 +1,21 @@
+[project]
+name = "b-graph"
+version = "0.1.0"
+description = "Turn relational business data into a queryable graph and LLM response."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.135.2",
+    "groq>=1.1.1",
+    "networkx>=3.6.1",
+    "pandas>=3.0.1",
+    "python-dotenv>=1.2.2",
+    "sqlite-utils>=3.39",
+    "uvicorn[standard]>=0.42.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.7",
+]

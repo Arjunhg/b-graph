@@ -1,0 +1,1 @@
+"""Node/edge type definitions (dataclasses)"""
