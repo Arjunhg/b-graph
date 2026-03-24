@@ -1,4 +1,4 @@
-# Dodge Graph Prompt Library
+# B Graph Prompt Library
 
 This file stores reusable prompts for the graph-based Order-to-Cash system.
 

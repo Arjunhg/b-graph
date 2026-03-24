@@ -1,10 +1,10 @@
-# Dodge Graph Agent Instructions
+# B Graph Agent Instructions
 
 You are building a graph-based Order-to-Cash exploration system from the provided dataset.
 
 ## Goal
 Create a local-first app that:
-- ingests CSV files into SQLite
+- ingests JSON (JSONL-style) files into SQLite
 - constructs a row-level business graph
 - exposes graph exploration APIs
 - supports natural-language querying through an LLM

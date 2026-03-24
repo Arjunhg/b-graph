@@ -1,4 +1,4 @@
-# Dodge Graph Build Checklist
+# B Graph Build Checklist
 
 ## Phase 0 — Repo setup
 - [ ] Confirm folder structure
@@ -7,13 +7,13 @@
 - [ ] Confirm dataset folders/files in `data/raw/`
 
 ## Phase 1 — Data layer
-- [ ] Inspect all CSV files
-- [ ] Identify primary keys and foreign-key-like columns
-- [ ] Define canonical entity mapping
-- [ ] Create SQLite database file
-- [ ] Build CSV → SQLite loader
-- [ ] Prevent duplicate re-ingestion on startup
-- [ ] Verify table counts after load
+- [x] Inspect all JSON files
+- [x] Identify primary keys and foreign-key-like columns
+- [x] Define canonical entity mapping
+- [x] Create SQLite database file
+- [x] Build JSON -> SQLite loader
+- [x] Prevent duplicate re-ingestion on startup
+- [x] Verify table counts after load
 
 ## Phase 2 — Graph modeling
 - [ ] Define node and edge schema
@@ -55,3 +55,4 @@
 - [ ] Deploy backend
 - [ ] Deploy frontend
 - [ ] Verify public demo works from a fresh environment
+
