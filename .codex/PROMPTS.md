@@ -208,7 +208,7 @@ Respond exactly:
 
 Do not add extra commentary.
 
-## 9) ## Business Terminology Mapping
+## 9) Business Terminology Mapping
 
 User terms may differ from schema. Use these mappings:
 
@@ -225,7 +225,7 @@ User terms may differ from schema. Use these mappings:
 
 Always translate user language into schema terms before generating SQL.
 
-## 10) ## Relationship Awareness
+## 10) Relationship Awareness
 
 Typical business flow:
 
