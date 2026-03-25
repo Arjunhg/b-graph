@@ -16,12 +16,12 @@
 - [x] Verify table counts after load
 
 ## Phase 2 — Graph modeling
-- [ ] Define node and edge schema
-- [ ] Decide node types for orders, deliveries, invoices, payments, customers, products, addresses, and journal entries
-- [ ] Define relationship types
-- [ ] Build row-level graph from SQLite
-- [ ] Attach row metadata to graph nodes
-- [ ] Validate that key business flows are traceable
+- [x] Define node and edge schema
+- [x] Decide node types for orders, deliveries, invoices, payments, customers, products, addresses, and journal entries
+- [x] Define relationship types
+- [x] Build row-level graph from SQLite
+- [x] Attach row metadata to graph nodes
+- [x] Validate that key business flows are traceable
 
 ## Phase 3 — API layer
 - [ ] Add graph fetch endpoint
@@ -55,4 +55,5 @@
 - [ ] Deploy backend
 - [ ] Deploy frontend
 - [ ] Verify public demo works from a fresh environment
+
 
