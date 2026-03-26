@@ -39,12 +39,12 @@
 - [x] Ensure answers cite or reflect actual query results
 
 ## Phase 5 — Frontend
-- [ ] Build graph canvas
-- [ ] Show node metadata panel
-- [ ] Support expand-on-click
-- [ ] Build chat panel
-- [ ] Sync chat results with graph highlights
-- [ ] Keep layout clean and simple
+- [x] Build graph canvas
+- [x] Show node metadata panel
+- [x] Support expand-on-click
+- [x] Build chat panel
+- [x] Sync chat results with graph highlights
+- [x] Keep layout clean and simple
 
 ## Phase 6 — Integration and testing
 - [ ] Verify no manual setup is needed beyond env vars
@@ -55,6 +55,7 @@
 - [ ] Deploy backend
 - [ ] Deploy frontend
 - [ ] Verify public demo works from a fresh environment
+
 
 
 
