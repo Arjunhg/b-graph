@@ -20,6 +20,7 @@ type GraphState = {
   selectedNodeId: string | null
   selectedNodeDetail: NodeDetailPayload | null
   highlightedNodeIds: string[]
+  tracedPath: string[]
   messages: ChatMessage[]
   isGraphLoading: boolean
   isChatLoading: boolean
@@ -36,6 +37,7 @@ type GraphState = {
   setSelectedNodeDetail: (payload: NodeDetailPayload | null) => void
   setSelectedNodeId: (value: string | null) => void
   setHighlightedNodeIds: (value: string[]) => void
+  setTracedPath: (value: string[]) => void
   pushMessage: (message: ChatMessage) => void
   applyChatResult: (payload: ChatPayload) => void
   toggleGranularOverlay: () => void
@@ -70,6 +72,7 @@ export const useGraphStore = create<GraphState>((set) => ({
   selectedNodeId: null,
   selectedNodeDetail: null,
   highlightedNodeIds: [],
+  tracedPath: [],
   messages: [INITIAL_MESSAGE],
   isGraphLoading: false,
   isChatLoading: false,
@@ -94,6 +97,7 @@ export const useGraphStore = create<GraphState>((set) => ({
   setSelectedNodeDetail: (payload) => set({ selectedNodeDetail: payload }),
   setSelectedNodeId: (value) => set({ selectedNodeId: value }),
   setHighlightedNodeIds: (value) => set({ highlightedNodeIds: value }),
+  setTracedPath: (value) => set({ tracedPath: value }),
   pushMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
@@ -109,6 +113,7 @@ export const useGraphStore = create<GraphState>((set) => ({
         },
       ],
       highlightedNodeIds: payload.highlighted_node_ids,
+      tracedPath: payload.traced_path ?? [],
       chatError: null,
     })),
   toggleGranularOverlay: () =>

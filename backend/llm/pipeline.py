@@ -57,6 +57,7 @@ TOPIC_TABLE_HINTS: dict[str, tuple[str, ...]] = {
 class ChatResult:
     answer: str
     highlighted_node_ids: tuple[str, ...]
+    traced_path: tuple[str, ...]  # ordered sequence for animation, empty if not a flow query
     in_scope: bool
     debug: dict[str, Any]
 
@@ -622,9 +623,64 @@ def _collect_highlight_values(query: str, execution: SQLExecutionResult) -> set[
             if value is None:
                 continue
             text = str(value)
-            if len(text) <= 40 and any(char.isdigit() for char in text):
+            # Require at least 5 chars so aggregate results like "100", "10", "1"
+            # don't get treated as node IDs. Real IDs in this dataset (orders,
+            # deliveries, billing docs, etc.) are all 5+ characters.
+            if 5 <= len(text) <= 40 and any(char.isdigit() for char in text):
                 values.add(text)
     return values
+
+
+# Ordered column sequence that maps O2C flow row columns to graph node table names.
+# Each tuple is (row_column, table_prefix) used to build a node ID like "table:value".
+_FLOW_COLUMN_TO_TABLE: list[tuple[str, str]] = [
+    ("salesOrder", "sales_order_headers"),
+    ("salesOrderItem", None),          # composite key, handled separately
+    ("deliveryDocument", "outbound_delivery_headers"),
+    ("deliveryDocumentItem", None),     # composite key, handled separately
+    ("billingDocument", "billing_document_headers"),
+    ("journalAccountingDocument", "journal_entry_items_accounts_receivable"),
+    ("paymentAccountingDocument", "payments_accounts_receivable"),
+]
+
+
+def  _extract_traced_path(execution: SQLExecutionResult) -> tuple[str, ...]:
+    """Return an ordered list of node IDs for O2C flow animation.
+
+    Only populated for flow queries whose result contains the standard O2C columns.
+    Returns an empty tuple for non-flow queries.
+    """
+    cols = set(execution.columns)
+    is_flow = {"salesOrder", "deliveryDocument", "billingDocument"}.issubset(cols)
+    if not is_flow or not execution.rows:
+        return ()
+
+    seen: dict[str, None] = {}
+    for row in execution.rows:
+        sales_order = row.get("salesOrder")
+        sales_order_item = row.get("salesOrderItem")
+        delivery = row.get("deliveryDocument")
+        delivery_item = row.get("deliveryDocumentItem")
+        billing = row.get("billingDocument")
+        journal = row.get("journalAccountingDocument")
+        payment = row.get("paymentAccountingDocument")
+
+        if sales_order:
+            seen.setdefault(f"sales_order_headers:{sales_order}", None)
+        if sales_order and sales_order_item:
+            seen.setdefault(f"sales_order_items:{sales_order}|{sales_order_item}", None)
+        if delivery:
+            seen.setdefault(f"outbound_delivery_headers:{delivery}", None)
+        if delivery and delivery_item:
+            seen.setdefault(f"outbound_delivery_items:{delivery}|{delivery_item}", None)
+        if billing:
+            seen.setdefault(f"billing_document_headers:{billing}", None)
+        if journal:
+            seen.setdefault(f"journal_entry_items_accounts_receivable:{journal}", None)
+        if payment:
+            seen.setdefault(f"payments_accounts_receivable:{payment}", None)
+
+    return tuple(seen.keys())
 
 
 def _highlight_nodes(
@@ -672,6 +728,7 @@ def run_chat_query(query: str, graph: nx.MultiDiGraph) -> ChatResult:
         return ChatResult(
             answer=DOMAIN_ONLY_REFUSAL,
             highlighted_node_ids=(),
+            traced_path=(),
             in_scope=False,
             debug={
                 "matched_keywords": [],
@@ -729,6 +786,7 @@ def run_chat_query(query: str, graph: nx.MultiDiGraph) -> ChatResult:
             return ChatResult(
                 answer="I could not produce a valid dataset query for that request.",
                 highlighted_node_ids=(),
+                traced_path=(),
                 in_scope=True,
                 debug={
                     "matched_keywords": matched_keywords,
@@ -740,6 +798,7 @@ def run_chat_query(query: str, graph: nx.MultiDiGraph) -> ChatResult:
             )
 
         highlighted_node_ids = _highlight_nodes(graph, query, execution)
+        traced_path = _extract_traced_path(execution)
         answer = _answer_via_llm(query, execution) or _synthesize_answer(query, execution)
 
         selected_tables = sorted(
@@ -751,6 +810,7 @@ def run_chat_query(query: str, graph: nx.MultiDiGraph) -> ChatResult:
         return ChatResult(
             answer=answer,
             highlighted_node_ids=highlighted_node_ids,
+            traced_path=traced_path,
             in_scope=True,
             debug={
                 "matched_keywords": matched_keywords,

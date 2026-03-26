@@ -20,6 +20,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     highlighted_node_ids: list[str]
+    traced_path: list[str]
     in_scope: bool
     debug: dict[str, Any]
 
@@ -34,6 +35,7 @@ def chat(request: Request, payload: ChatRequest) -> ChatResponse:
     return ChatResponse(
         answer=result.answer,
         highlighted_node_ids=list(result.highlighted_node_ids),
+        traced_path=list(result.traced_path),
         in_scope=result.in_scope,
         debug=result.debug,
     )
