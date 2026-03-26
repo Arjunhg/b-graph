@@ -32,11 +32,11 @@
 - [x] Return highlighted node IDs from relevant answers
 
 ## Phase 4 — LLM pipeline
-- [ ] Write schema-aware SQL generation prompt
-- [ ] Write answer synthesis prompt
-- [ ] Add SQL validation / retry on failure
-- [ ] Ensure non-domain questions are rejected
-- [ ] Ensure answers cite or reflect actual query results
+- [x] Write schema-aware SQL generation prompt
+- [x] Write answer synthesis prompt
+- [x] Add SQL validation / retry on failure
+- [x] Ensure non-domain questions are rejected
+- [x] Ensure answers cite or reflect actual query results
 
 ## Phase 5 — Frontend
 - [ ] Build graph canvas
@@ -55,6 +55,7 @@
 - [ ] Deploy backend
 - [ ] Deploy frontend
 - [ ] Verify public demo works from a fresh environment
+
 
 
 
