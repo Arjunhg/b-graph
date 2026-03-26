@@ -51,9 +51,13 @@ app.include_router(graph_router, prefix="/api/graph", tags=["graph"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 
-
 @app.get("/health")
 def health() -> dict[str, Any]:
+    return {"ok": True}
+
+
+@app.get("/health/full")
+def health_full() -> dict[str, Any]:
     report = getattr(app.state, "ingestion_report", None)
     graph_report = getattr(app.state, "graph_report", None)
     return {
