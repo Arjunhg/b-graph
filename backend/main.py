@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import REINGEST_ON_STARTUP, SQLITE_DB_PATH
 from backend.db.loader import bootstrap_database
 from backend.graph.builder import build_graph
 from backend.routes import chat_router, graph_router
+
+# Comma-separated list of allowed origins, e.g.:
+#   ALLOWED_ORIGINS="https://your-app.vercel.app,https://your-custom-domain.com"
+# Defaults to localhost for local development.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 
 @asynccontextmanager
@@ -32,8 +40,16 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(graph_router, prefix="/api/graph", tags=["graph"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
+
 
 
 @app.get("/health")
