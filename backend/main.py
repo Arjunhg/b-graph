@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from backend.config import REINGEST_ON_STARTUP, SQLITE_DB_PATH
 from backend.db.loader import bootstrap_database
 from backend.graph.builder import build_graph
+from backend.routes import chat_router, graph_router
 
 
 @asynccontextmanager
@@ -31,6 +32,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.include_router(graph_router, prefix="/api/graph", tags=["graph"])
+app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 
 @app.get("/health")
