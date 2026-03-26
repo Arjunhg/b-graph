@@ -24,12 +24,12 @@
 - [x] Validate that key business flows are traceable
 
 ## Phase 3 — API layer
-- [ ] Add graph fetch endpoint
-- [ ] Add node expansion endpoint
-- [ ] Add node metadata endpoint if needed
-- [ ] Add chat/query endpoint
-- [ ] Add domain guardrail for unrelated prompts
-- [ ] Return highlighted node IDs from relevant answers
+- [x] Add graph fetch endpoint
+- [x] Add node expansion endpoint
+- [x] Add node metadata endpoint if needed
+- [x] Add chat/query endpoint
+- [x] Add domain guardrail for unrelated prompts
+- [x] Return highlighted node IDs from relevant answers
 
 ## Phase 4 — LLM pipeline
 - [ ] Write schema-aware SQL generation prompt
@@ -55,5 +55,6 @@
 - [ ] Deploy backend
 - [ ] Deploy frontend
 - [ ] Verify public demo works from a fresh environment
+
 
 
