@@ -42,6 +42,7 @@ export type NodeDetailPayload = {
 export type ChatPayload = {
   answer: string
   highlighted_node_ids: string[]
+  traced_path: string[]
   in_scope: boolean
   debug: {
     matched_keywords?: string[]

@@ -6,6 +6,7 @@ import { NodeDetail } from './NodeDetail'
 
 type GraphViewProps = {
   graph: GraphPayload
+  tracedPath: string[]           // ordered O2C path for step animation
   highlightedNodeIds: string[]
   selectedNodeId: string | null
   selectedNodeDetail: {
@@ -47,13 +48,7 @@ function isOverlayEdge(edge: GraphEdgeRecord) {
   return OVERLAY_EDGE_TYPES.has(edge.edge_type)
 }
 
-function nodeColor(node: GraphNodeRecord, highlightedNodeIds: Set<string>, selectedNodeId: string | null) {
-  if (node.id === selectedNodeId) {
-    return '#0369a1'
-  }
-  if (highlightedNodeIds.has(node.id)) {
-    return '#111827'
-  }
+function nodeBaseColor(node: GraphNodeRecord) {
   if (
     node.node_type.includes('customer') ||
     node.node_type.includes('product') ||
@@ -64,13 +59,8 @@ function nodeColor(node: GraphNodeRecord, highlightedNodeIds: Set<string>, selec
   return '#7db9f5'
 }
 
-function createVisibleGraph(
-  graph: GraphPayload,
-  showGranularOverlay: boolean,
-) {
-  if (showGranularOverlay) {
-    return graph
-  }
+function createVisibleGraph(graph: GraphPayload, showGranularOverlay: boolean) {
+  if (showGranularOverlay) return graph
 
   const filteredEdges = graph.edges.filter((edge) => !isOverlayEdge(edge))
   const visibleNodeIds = new Set<string>()
@@ -78,13 +68,13 @@ function createVisibleGraph(
     visibleNodeIds.add(edge.source)
     visibleNodeIds.add(edge.target)
   }
-
   const filteredNodes = graph.nodes.filter((node) => visibleNodeIds.has(node.id))
   return { nodes: filteredNodes, edges: filteredEdges }
 }
 
 export function GraphView({
   graph,
+  tracedPath,
   highlightedNodeIds,
   selectedNodeId,
   selectedNodeDetail,
@@ -99,12 +89,11 @@ export function GraphView({
   const graphRef = useRef<any>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
   const [dimensions, setDimensions] = useState({ width: 900, height: 640 })
+  // activeTrace holds the subset of tracedPath nodes revealed so far during animation
+  const [activeTrace, setActiveTrace] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (!stageRef.current) {
-      return
-    }
-
+    if (!stageRef.current) return
     const observer = new ResizeObserver(([entry]) => {
       const width = entry.contentRect.width
       const height = entry.contentRect.height
@@ -115,7 +104,6 @@ export function GraphView({
         })
       })
     })
-
     observer.observe(stageRef.current)
     return () => observer.disconnect()
   }, [])
@@ -123,15 +111,27 @@ export function GraphView({
   const visibleGraph = createVisibleGraph(graph, showGranularOverlay)
   const highlightedSet = new Set(highlightedNodeIds)
 
+  // zoomToFit when graph changes
   useEffect(() => {
-    if (!graphRef.current || visibleGraph.nodes.length === 0) {
-      return
-    }
+    if (!graphRef.current || visibleGraph.nodes.length === 0) return
     const timer = window.setTimeout(() => {
       graphRef.current?.zoomToFit(500, 56)
     }, 180)
     return () => window.clearTimeout(timer)
   }, [visibleGraph.nodes.length, visibleGraph.edges.length, isCompactGraph, showGranularOverlay])
+
+  // Step-by-step path animation: reveal one node every 350ms
+  useEffect(() => {
+    setActiveTrace(new Set())
+    if (!tracedPath.length) return
+    let step = 0
+    const interval = window.setInterval(() => {
+      step += 1
+      setActiveTrace(new Set(tracedPath.slice(0, step)))
+      if (step >= tracedPath.length) window.clearInterval(interval)
+    }, 350)
+    return () => window.clearInterval(interval)
+  }, [tracedPath])
 
   return (
     <section className="graph-stage-shell">
@@ -160,34 +160,61 @@ export function GraphView({
           backgroundColor="rgba(255,255,255,0)"
           nodeRelSize={isCompactGraph ? 2.2 : 3.6}
           cooldownTicks={140}
-          linkDirectionalParticles={0}
           linkWidth={(edge) => {
+            // After force simulation, source/target become node objects — extract id from either
+            const src = typeof edge.source === 'object' ? (edge.source as ForceNode).id : edge.source as string
+            const tgt = typeof edge.target === 'object' ? (edge.target as ForceNode).id : edge.target as string
+            if (activeTrace.has(src) && activeTrace.has(tgt)) return 2.4
+            if (highlightedSet.has(src) || highlightedSet.has(tgt)) return 1.8
             const record = edge as GraphEdgeRecord
-            if (highlightedSet.has(record.source as string) || highlightedSet.has(record.target as string)) {
-              return 1.8
-            }
-            return isOverlayEdge(record) ? 0.35 : 0.9
+            return isOverlayEdge({ ...record, source: src, target: tgt }) ? 0.35 : 0.9
           }}
+          linkDirectionalParticles={(edge) => {
+            const src = typeof edge.source === 'object' ? (edge.source as ForceNode).id : edge.source as string
+            const tgt = typeof edge.target === 'object' ? (edge.target as ForceNode).id : edge.target as string
+            return activeTrace.has(src) && activeTrace.has(tgt) ? 3 : 0
+          }}
+          linkDirectionalParticleWidth={2.5}
+          linkDirectionalParticleColor={() => 'rgba(251, 146, 60, 0.9)'}
           linkColor={(edge) => {
+            const src = typeof edge.source === 'object' ? (edge.source as ForceNode).id : edge.source as string
+            const tgt = typeof edge.target === 'object' ? (edge.target as ForceNode).id : edge.target as string
+            if (activeTrace.has(src) && activeTrace.has(tgt)) return 'rgba(251, 146, 60, 0.75)'
+            const isHighlighted = highlightedSet.has(src) || highlightedSet.has(tgt)
+            if (isHighlighted) return 'rgba(3, 105, 161, 0.65)'
             const record = edge as GraphEdgeRecord
-            const isHighlighted =
-              highlightedSet.has(record.source as string) || highlightedSet.has(record.target as string)
-            if (isHighlighted) {
-              return 'rgba(3, 105, 161, 0.65)'
-            }
-            return isOverlayEdge(record) ? 'rgba(125, 185, 245, 0.08)' : 'rgba(125, 185, 245, 0.26)'
+            return isOverlayEdge({ ...record, source: src, target: tgt }) ? 'rgba(125, 185, 245, 0.08)' : 'rgba(125, 185, 245, 0.26)'
           }}
           nodeCanvasObject={(node, context, globalScale) => {
             const label = node.id
             const radius = isCompactGraph ? 2.1 : 3
-            const color = nodeColor(node, highlightedSet, selectedNodeId)
+            const isTraced = activeTrace.has(node.id)
+            const isHighlighted = highlightedSet.has(node.id)
+            const isSelected = node.id === selectedNodeId
+
+            // Color priority: selected > traced (amber) > highlighted (dark) > base color
+            let color: string
+            if (isSelected) color = '#0369a1'
+            else if (isTraced) color = '#f97316'
+            else if (isHighlighted) color = '#111827'
+            else color = nodeBaseColor(node)
 
             context.beginPath()
             context.arc(node.x ?? 0, node.y ?? 0, radius, 0, 2 * Math.PI, false)
             context.fillStyle = color
             context.fill()
 
-            if (node.id === selectedNodeId) {
+            // Amber glow ring for traced path nodes
+            if (isTraced) {
+              context.beginPath()
+              context.arc(node.x ?? 0, node.y ?? 0, radius + 3.5, 0, 2 * Math.PI, false)
+              context.strokeStyle = 'rgba(251, 146, 60, 0.35)'
+              context.lineWidth = 2.5
+              context.stroke()
+            }
+
+            // Blue ring for selected node
+            if (isSelected) {
               context.beginPath()
               context.arc(node.x ?? 0, node.y ?? 0, radius + 4, 0, 2 * Math.PI, false)
               context.strokeStyle = 'rgba(3, 105, 161, 0.3)'
@@ -195,7 +222,8 @@ export function GraphView({
               context.stroke()
             }
 
-            if (highlightedSet.has(node.id) || node.id === selectedNodeId) {
+            // Show label for any prominent node
+            if (isTraced || isHighlighted || isSelected) {
               const fontSize = 12 / globalScale
               context.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`
               context.fillStyle = '#1f2937'

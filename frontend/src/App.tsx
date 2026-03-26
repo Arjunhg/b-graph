@@ -18,6 +18,7 @@ function App() {
     selectedNodeId,
     selectedNodeDetail,
     highlightedNodeIds,
+    tracedPath,
     messages,
     isGraphLoading,
     isChatLoading,
@@ -113,6 +114,7 @@ function App() {
           <GraphView
             graph={{ nodes, edges }}
             highlightedNodeIds={highlightedNodeIds}
+            tracedPath={tracedPath}
             selectedNodeId={selectedNodeId}
             selectedNodeDetail={selectedNodeDetail}
             showGranularOverlay={showGranularOverlay}
